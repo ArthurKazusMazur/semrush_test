@@ -6,9 +6,9 @@ export class BingPage {
   readonly newsFilter: Locator;
   readonly imagesFilter: Locator;
   readonly videosFilter: Locator;
-  readonly imageCardCSS: Locator;
-  readonly videoCardCSS: Locator;
-  readonly newsCardCSS: Locator;
+  readonly imageCardCSS: string;
+  readonly videoCardCSS: string;
+  readonly newsCardCSS: string;
 
   constructor(page: Page) {
     this.page = page;
@@ -17,9 +17,9 @@ export class BingPage {
     this.newsFilter = page.locator('a').getByText('News');
     this.imagesFilter = page.locator('a').getByText('Images')
     this.videosFilter = page.locator('a').getByText('Videos');
-    this.imageCardCSS = page.locator('.mimg');
-    this.videoCardCSS = page.locator('.mc_fgvc_u');
-    this.newsCardCSS = page.locator('.news-card');
+    this.imageCardCSS ='.mimg';
+    this.videoCardCSS = '.mc_fgvc_u';
+    this.newsCardCSS = '.news-card';
   }
  
   async goto() {
@@ -28,8 +28,10 @@ export class BingPage {
   }
 
   async doBingSearch(keyword: string) {
+    await this.page.locator('#bnp_btn_reject').click();
     await this.bingSearchInput.fill(keyword);
     await this.bingSearchInput.press('Enter');
+    await this.page.waitForLoadState('domcontentloaded');
     expect(this.page.url()).toContain('/search');
   }
 
@@ -41,21 +43,26 @@ export class BingPage {
     };
   
     const filterLocator = filterLocators[filter];
+
+    const [newPage] = await Promise.all([
+      this.page.context().waitForEvent('page'), 
+      filterLocator.click(), 
+    ]);
   
-    await filterLocator.click();
+    await newPage.waitForLoadState('domcontentloaded');
+    return newPage;
   }
 
-  async verifyBingSearchResult(result: string) {
-    const resultDetails: Record<string, { urlPart: string; cardLocator: Locator }> = {
+  async verifyBingSearchResult(newPage: Page,result: string) {
+    const resultDetails: Record<string, { urlPart: string; cardLocator: string }> = {
       News: { urlPart: '/news/search', cardLocator: this.newsCardCSS },
       Images: { urlPart: '/images/search', cardLocator: this.imageCardCSS },
       Videos: { urlPart: 'videos/search', cardLocator: this.videoCardCSS },
     };
   
     const details = resultDetails[result];
-     
-    expect(this.page.url()).toContain(details.urlPart);
-    expect(await details.cardLocator.count()).toBeGreaterThan(0);
+    expect(newPage.url()).toContain(details.urlPart);
+    expect(await newPage.locator(details.cardLocator).count()).toBeGreaterThan(0);
   }
 }
 

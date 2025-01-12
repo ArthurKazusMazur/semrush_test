@@ -11,6 +11,6 @@ Feature: Search on different search engines with filter options
       | bing   | semrush | News          | News        |
       | bing   | semrush | Image         | Image       |
       | bing   | semrush | Videos        | Videos      |
-      | google | prowly  | Past 24 hours | hours ago   |
-      | google | prowly  | Past week     | days ago    |
-      | google | prowly  | Past hour     | minutes ago |
+      | google | prowly  | Past_24_hours | hours ago   |
+      | google | prowly  | Past_week     | days ago    |
+      | google | prowly  | Past_month    | XX XXX XXXX |

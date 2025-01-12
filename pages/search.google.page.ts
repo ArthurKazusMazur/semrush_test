@@ -3,7 +3,7 @@ import { Page, Locator, expect } from "@playwright/test";
 export class GooglePage {
   readonly page: Page;
   readonly toolsButton: Locator;
-  readonly declineCookiesButton:Locator
+  readonly declineCookiesButton: Locator
   readonly googleSearchInput: Locator;
   readonly timePicker: Locator;
   readonly pastMonthFilter: Locator;
@@ -37,25 +37,26 @@ export class GooglePage {
   async doGoogleSearch(keyword: string) {
     await this.googleSearchInput.fill(keyword);
     await this.googleSearchInput.press('Enter');
+    await this.page.waitForLoadState('domcontentloaded');
     expect(this.page.url()).toContain('/search');
   }
 
   async filterGoogleSearch(filter: string) {
-    const requestPromise = this.page.waitForRequest(/^https:\/\/www\.google\.com\/async\/bgasy\?(.*)$/);
-    
+    const responsePromise = this.page.waitForResponse(/^https:\/\/www\.google\.com\/async\/bgasy\?(.*)$/);
+
     const filterLocators: Record<string, Locator> = {
       Past_24_hours: this.past24HourFilter,
       Past_week    : this.pastWeekFilter,
       Past_month    : this.pastMonthFilter,
     };
-  
+
     const filterLocator = filterLocators[filter];
-  
+
     await this.toolsButton.click();
     await this.timePicker.click();
     await filterLocator.click();
-
-    const response = await requestPromise; 
+    
+    const response = await responsePromise; 
   }
 
   async verifyGoogleSearchResult(result: string) {
